@@ -1,1 +1,1 @@
-# 7shifts-technical-interview
+# technical-interview
