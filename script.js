@@ -6,7 +6,7 @@
  * @param { string } numbers    List of numbers separated by commas or custom delimiter(s).
  * @returns { int } Sum of all numbers.
  */
-function add(numbers) {
+const add = function (numbers) {
   // check for valid inputs
   if (numbers == null || typeof numbers !== "string") {
     return 0;
@@ -26,11 +26,9 @@ function add(numbers) {
       // add to sum, when num between 0 and 1000
       if (num < 0) {
         validInput = false;
-        throw `Negatives not allowed: ${num}`;
-      } else {
-        if (Number.isInteger(num) && num <= 1000) {
-          sum += num;
-        }
+        throw new RangeError(`Negatives not allowed: ${num}`);
+      } else if (Number.isInteger(num) && num <= 1000) {
+        sum += num;
       }
     } catch (e) {
       console.error(e);
@@ -42,7 +40,7 @@ function add(numbers) {
   }
 
   return sum;
-}
+};
 
 /**
  * Splits a string of numbers based on a delimiter.
@@ -69,49 +67,68 @@ const splitOnDelimiter = function (numbers, aDelimiter) {
   return numbers.split(aDelimiter);
 };
 
-// Create tests
-const addTest = function (input, expected) {
-  let answer = add(input);
+const tests = [
+  ["", 0],
+  [" ", 0],
+  [",", 0],
+  ["1,,2", 3],
 
-  if (answer !== expected) {
-    console.log(`add("${input}"): Expected ${expected}, but got ${answer}`);
-  }
+  ["1", 1],
+  ["1,2,3", 6],
+  ["10 , 200", 210],
+
+  ["1\n, 2", 3],
+  ["1\n,2,3", 6],
+  ["1\n, \n10, \n500", 511],
+
+  ["//x/\n1x/2", 3],
+  ["//;\n1;3;4", 8],
+  ["//xyz!?@#$%^&*\n100 xyz!?@#$%^&* 20", 120],
+  ["//$\n1$2$3", 6],
+  ["//@\n2@3@8", 13],
+
+  ["//@\n-2@3@8", 0],
+  ["1,-10", 0],
+
+  ["//$,@\n1$2@3", 6],
+
+  ["//$,@xc,#..\n1$2@xc3#..100", 106],
+  ["//$dd,@xc,#..\n1@xc2$ddxc3#..200", 206],
+];
+
+/**
+ * Returns a test function that can check if returned value is the expected value.
+ * @param { function } callback A callback function to call in the test
+ * @param { string } input The parameter to be called in the callback function
+ * @param { * } expected The value to compare with
+ */
+const createTest = function (callback, input, expected) {
+  return function (input, expected) {
+    let answer = callback(input);
+
+    if (answer !== expected) {
+      throw `add("${input}"): Expected ${expected}, but got ${answer}`;
+    }
+  };
 };
 
-// Unit Tests
-(() => {
-  // special cases
-  addTest("", 0);
-  addTest(" ", 0);
-  addTest(",", 0);
-  addTest("1,,2", 3);
+const addTest = createTest(add);
 
-  // simple addition
-  addTest("1", 1);
-  addTest("1,2", 3);
-  addTest("1,2,3", 6);
-  addTest("10 , 20", 30);
+function runTests(allTests, callback) {
+  let success = allTests.length;
 
-  // new lines '\n'
-  addTest("1\n, 2", 3);
-  addTest("1\n,2,3", 6);
-  addTest("1\n, \n10, \n500", 511);
+  console.log("-----------RUNNING TESTS-----------");
+  // run each test
+  allTests.forEach((testCase) => {
+    try {
+      callback(testCase[0], testCase[1]);
+    } catch (e) {
+      console.error(e);
+      success--;
+    }
+  });
 
-  // custom delimiter
-  addTest("//x/\n1x/2", 3);
-  addTest("//;\n1;3;4", 8);
-  addTest("//xyz!?@#$%^&*\n100 xyz!?@#$%^&* 20", 120);
-  addTest("//$\n1$2$3", 6);
-  addTest("//@\n2@3@8", 13);
+  console.log(`${success} of ${allTests.length} tests ran successfully.`);
+}
 
-  // negative numbers
-  addTest("//@\n-2@3@8", 0);
-  addTest("1,-10", 0);
-
-  // multiple delimiters
-  addTest("//$,@\n1$2@3", 6);
-
-  // multiple delimiters of arbitrary length
-  addTest("//$,@xc,#..\n1$2@xc3#..100", 106);
-  addTest("//$dd,@xc,#..\n1@xc2$ddxc3#..200", 206);
-})();
+runTests(tests, addTest);
